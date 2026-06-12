@@ -148,4 +148,5 @@ Therefore, a long-term strategic partnership presents considerable business risk
 
 ## Project File
 
-- `Case_of_Study_ENIAC.pptx` – Final presentation
+[Case _of_Study_ENIAC .pptx](https://github.com/user-attachments/files/28887047/Case._of_Study_ENIAC.pptx)
+
