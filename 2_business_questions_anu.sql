@@ -146,9 +146,51 @@ WHERE
 SELECT 1666211.28 / 454 / 25;
 	-- 146.80
 
+select
+ Total_RevenueTech,TotalNumberofTechsellers,Months,
+round(Total_RevenueTech/(TotalNumberofTechsellers*months) ,2)as AverageMonthlyIncomeTechsellers from 
+(Select 
+round(sum(case
+ when order_status NOT IN ('unavailable','canceled') then price #Total revenue from all valid orders (excluding unavailable or canceled)
+else NULL 
+end ),2) as Total_RevenueTech,
+count(distinct seller_id) as TotalNumberofTechsellers,
+(select timestampdiff(month,min(order_purchase_timestamp),max(order_purchase_timestamp)) from orders )as Months
+/*calculating the total months in a separate, unfiltered subquery ,
+without subquery select timestampdiff(month,min(order_purchase_timestamp),max(order_purchase_timestamp)) from orders )
+the output will show as 23 months*/
+from orders o left join order_items oi using(order_id) 
+left join 
+  products p USING (product_id)
+inner join product_category_name_translation pt using(product_category_name)
+ where pt.product_category_name_english 
+ in ('electronics','computers_accessories','consoles_games','security_and_services','audio','watches_gifts',
+ 'pc_gamer','computers','telephony','tablets_printing_image') )as techsellers;
+
+
 /*****
 In relation to the delivery time:
 *****/
+-- How many tech orders are delivered on time vs orders delivered with a delay?
+
+SELECT
+    CASE
+        WHEN date(order_delivered_customer_date) <= date(order_estimated_delivery_date)
+            THEN 'Delivered On Time'
+        ELSE 'Delivered With Delay'
+    END AS delivery_status,
+    COUNT(distinct o.order_id) AS number_of_orders 
+FROM orders o LEFT JOIN order_items oi using (order_id) join 
+    products p USING (product_id)
+join product_category_name_translation pt 
+on p.product_category_name=pt.product_category_name
+WHERE o.order_status = 'delivered' AND o.order_estimated_delivery_date IS NOT NULL
+    AND o.order_delivered_customer_date IS NOT NULL AND pt.product_category_name_english IN (
+        'electronics', 'computers_accessories', 'consoles_games',
+        'security_and_services', 'audio', 'watches_gifts',
+        'pc_gamer', 'computers', 'telephony', 'tablets_printing_image'
+      )
+GROUP BY delivery_status ;
 
 -- What’s the average time between the order being placed and the product being delivered?
 SELECT AVG(DATEDIFF(order_delivered_customer_date, order_purchase_timestamp))
